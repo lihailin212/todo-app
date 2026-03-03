@@ -10,7 +10,7 @@ export function AddTaskForm() {
   const [categoryId, setCategoryId] = useState<string>('')
   const [isExpanded, setIsExpanded] = useState(false)
   const [isButtonEnabled, setIsButtonEnabled] = useState(false)
-  const { addTask, loading, categories, fetchCategories } = useTodoStore()
+  const { addTask, loading, categories, fetchCategories, checkReminders } = useTodoStore()
 
   // 添加调试函数来手动测试
   const debugSetTitle = (text: string) => {
@@ -233,6 +233,46 @@ export function AddTaskForm() {
             className="px-3 py-1 bg-green-100 text-green-700 text-xs rounded hover:bg-green-200"
           >
             重新加载分类
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              console.log('🔔 手动检查提醒...')
+              checkReminders()
+              console.log('提醒检查完成，查看控制台输出')
+            }}
+            className="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded hover:bg-purple-200"
+          >
+            立即检查提醒
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              console.log('🧪 运行提醒测试脚本...')
+              // 在控制台提供测试脚本
+              console.log(`
+可以在浏览器控制台运行以下代码进行测试：
+
+// 1. 获取当前store状态
+const store = useTodoStore.getState()
+
+// 2. 如果有任务，修改第一个任务的创建时间为24小时前（仅本地测试）
+if (store.tasks.length > 0) {
+  const task = store.tasks[0]
+  const fakeCreatedAt = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  console.log('模拟修改任务创建时间:', task.title, '->', fakeCreatedAt)
+
+  // 注意：这只是本地模拟，不会保存到数据库
+  // 实际测试需要修改数据库中的created_at字段
+}
+
+// 3. 运行提醒检查
+store.checkReminders()
+`)
+            }}
+            className="px-3 py-1 bg-orange-100 text-orange-700 text-xs rounded hover:bg-orange-200"
+          >
+            显示测试说明
           </button>
         </div>
       </div>

@@ -1,0 +1,6 @@
+Testing todo-app launcher...
+Python detected, starting HTTP server...
+App URL: http://localhost:8002
+Press Ctrl+C to stop
+
+::1 - - [01/Mar/2026 19:32:50] "GET / HTTP/1.1" 200 -

@@ -4,6 +4,7 @@ import { Auth } from './components/Auth'
 import { AddTaskForm } from './components/AddTaskForm'
 import { TaskList } from './components/TaskList'
 import { CategoryManager } from './components/CategoryManager'
+import { ReminderDialog } from './components/ReminderDialog'
 import { LogOut, User, Tag } from 'lucide-react'
 import { useTodoStore } from './store/todoStore'
 import './App.css'
@@ -12,7 +13,7 @@ function App() {
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
-  const { tasks, realtimeConnected, fetchTasks, fetchCategories, setupRealtimeSubscription, cleanupRealtimeSubscription } = useTodoStore()
+  const { tasks, realtimeConnected, fetchTasks, fetchCategories, setupRealtimeSubscription, cleanupRealtimeSubscription, reminderDialogVisible, currentReminderTask, checkReminders } = useTodoStore()
 
   useEffect(() => {
     // 检查当前会话
@@ -46,6 +47,23 @@ function App() {
       }
     }
   }, [session])
+
+  // 定时检查提醒
+  useEffect(() => {
+    if (!session) return
+
+    // 设置每5分钟检查一次提醒
+    const intervalId = setInterval(() => {
+      checkReminders()
+    }, 5 * 60 * 1000) // 5分钟
+
+    // 立即检查一次
+    checkReminders()
+
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, [session, checkReminders])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -130,6 +148,11 @@ function App() {
           <TaskList />
         </div>
       </main>
+
+      {/* 提醒对话框 */}
+      {reminderDialogVisible && currentReminderTask && (
+        <ReminderDialog task={currentReminderTask} />
+      )}
 
       {/* 页脚 */}
       <footer className="mt-12 border-t pt-8 pb-12">

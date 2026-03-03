@@ -11,6 +11,9 @@ interface TodoStore {
   loading: boolean
   error: string | null
   realtimeConnected: boolean  // 新增：实时连接状态
+  reminders: Task[]  // 需要提醒的任务列表
+  reminderDialogVisible: boolean  // 提醒对话框是否可见
+  currentReminderTask: Task | null  // 当前正在提醒的任务
 
   fetchTasks: () => Promise<void>
   addTask: (title: string, description?: string, priority?: number, dueDate?: string, categoryId?: string) => Promise<void>
@@ -27,6 +30,12 @@ interface TodoStore {
   // 实时订阅方法
   setupRealtimeSubscription: () => Promise<void>
   cleanupRealtimeSubscription: () => void
+
+  // 提醒相关方法
+  checkReminders: () => void
+  showReminderDialog: (task: Task) => void
+  closeReminderDialog: () => void
+  markAsReminded: (taskId: string) => Promise<void>
 }
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
@@ -35,6 +44,9 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   loading: false,
   error: null,
   realtimeConnected: false,  // 新增
+  reminders: [],  // 需要提醒的任务列表
+  reminderDialogVisible: false,  // 提醒对话框是否可见
+  currentReminderTask: null,  // 当前正在提醒的任务
 
   fetchTasks: async () => {
     set({ loading: true, error: null })
@@ -417,6 +429,97 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     if (realtimeChannel) {
       supabase.removeChannel(realtimeChannel)
       realtimeChannel = null
+    }
+  },
+
+  // 检查需要提醒的任务
+  checkReminders: () => {
+    const state = get()
+    const now = new Date()
+    const nowTime = now.getTime()
+
+    const remindersToShow: Task[] = []
+
+    state.tasks.forEach((task) => {
+      // 只检查未完成的任务
+      if (task.completed) return
+
+      const createdAt = new Date(task.created_at).getTime()
+      const lastRemindedAt = task.last_reminded_at ? new Date(task.last_reminded_at).getTime() : null
+
+      // 计算距离上次提醒的时间（如果没有提醒过，则使用创建时间）
+      const startTime = lastRemindedAt || createdAt
+      const timeElapsed = nowTime - startTime
+
+      // 根据优先级计算提醒间隔（毫秒）
+      const reminderIntervals: Record<1 | 2 | 3, number> = {
+        1: 24 * 60 * 60 * 1000, // 高优先级：24小时
+        2: 48 * 60 * 60 * 1000, // 中优先级：48小时
+        3: 72 * 60 * 60 * 1000  // 低优先级：72小时
+      }
+
+      // 检查是否到达提醒时间
+      if (timeElapsed >= reminderIntervals[task.priority]) {
+        remindersToShow.push(task)
+      }
+    })
+
+    // 如果有需要提醒的任务，设置提醒列表
+    if (remindersToShow.length > 0) {
+      set({ reminders: remindersToShow })
+
+      // 如果没有正在显示的提醒，显示第一个
+      if (!state.reminderDialogVisible && state.currentReminderTask === null) {
+        get().showReminderDialog(remindersToShow[0])
+      }
+    } else {
+      set({ reminders: [] })
+    }
+  },
+
+  // 显示提醒对话框
+  showReminderDialog: (task: Task) => {
+    set({
+      reminderDialogVisible: true,
+      currentReminderTask: task
+    })
+  },
+
+  // 关闭提醒对话框
+  closeReminderDialog: () => {
+    set({
+      reminderDialogVisible: false,
+      currentReminderTask: null
+    })
+  },
+
+  // 标记任务为已提醒
+  markAsReminded: async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ last_reminded_at: new Date().toISOString() })
+        .eq('id', taskId)
+
+      if (error) throw error
+
+      // 更新本地状态
+      set((state) => ({
+        tasks: state.tasks.map((task) =>
+          task.id === taskId ? { ...task, last_reminded_at: new Date().toISOString() } : task
+        ),
+        reminders: state.reminders.filter((task) => task.id !== taskId)
+      }))
+
+      // 如果有更多待提醒的任务，显示下一个
+      const nextState = get()
+      if (nextState.reminders.length > 0) {
+        get().showReminderDialog(nextState.reminders[0])
+      } else {
+        get().closeReminderDialog()
+      }
+    } catch (error: any) {
+      console.error('标记提醒失败:', error)
     }
   }
 }))

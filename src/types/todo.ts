@@ -9,6 +9,7 @@ export interface Task {
   updated_at: string
   user_id: string
   category_id?: string  // 新增字段
+  last_reminded_at?: string  // 上次提醒时间，用于循环提醒
 }
 
 export interface Category {
