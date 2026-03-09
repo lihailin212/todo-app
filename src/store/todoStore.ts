@@ -183,7 +183,14 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     const task = get().tasks.find((t) => t.id === id)
     if (!task) return
 
-    await get().updateTask(id, { completed: !task.completed })
+    const newCompleted = !task.completed
+    const updates: any = { completed: newCompleted }
+    if (newCompleted) {
+      updates.completed_at = new Date().toISOString()
+    } else {
+      updates.completed_at = null
+    }
+    await get().updateTask(id, updates)
   },
 
   // 分类方法

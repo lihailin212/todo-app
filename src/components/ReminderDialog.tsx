@@ -35,7 +35,7 @@ export function ReminderDialog({ task }: ReminderDialogProps) {
   }
 
   const handleCompleteTask = async () => {
-    await updateTask(task.id, { completed: true })
+    await updateTask(task.id, { completed: true, completed_at: new Date().toISOString() })
     closeReminderDialog()
   }
 

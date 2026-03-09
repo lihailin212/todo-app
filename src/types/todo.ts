@@ -3,6 +3,7 @@ export interface Task {
   title: string
   description?: string
   completed: boolean
+  completed_at?: string  // 任务完成时间
   priority: 1 | 2 | 3 // 1:高, 2:中, 3:低
   due_date?: string
   created_at: string

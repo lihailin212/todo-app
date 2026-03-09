@@ -5,14 +5,18 @@ import { AddTaskForm } from './components/AddTaskForm'
 import { TaskList } from './components/TaskList'
 import { CategoryManager } from './components/CategoryManager'
 import { ReminderDialog } from './components/ReminderDialog'
-import { LogOut, User, Tag } from 'lucide-react'
+import { History } from './components/History'
+import { LogOut, User, Tag, ListFilter, Clock } from 'lucide-react'
 import { useTodoStore } from './store/todoStore'
 import './App.css'
+
+type TabType = 'tasks' | 'history'
 
 function App() {
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('tasks')
   const { tasks, realtimeConnected, fetchTasks, fetchCategories, setupRealtimeSubscription, cleanupRealtimeSubscription, reminderDialogVisible, currentReminderTask, checkReminders } = useTodoStore()
 
   useEffect(() => {
@@ -124,7 +128,7 @@ function App() {
 
       {/* 主内容区 */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
+        <div className="mb-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             欢迎回来，{session.user.email?.split('@')[0]}！
           </h2>
@@ -142,10 +146,42 @@ function App() {
           </div>
         </div>
 
+        <div className="mb-6">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'tasks'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <ListFilter className="w-4 h-4" />
+              <span>当前任务</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'history'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>历史记录</span>
+            </button>
+          </div>
+        </div>
+
         <div className="space-y-8">
           {showCategoryManager && <CategoryManager />}
-          <AddTaskForm />
-          <TaskList />
+          {activeTab === 'tasks' && (
+            <>
+              <AddTaskForm />
+              <TaskList />
+            </>
+          )}
+          {activeTab === 'history' && <History />}
         </div>
       </main>
 
