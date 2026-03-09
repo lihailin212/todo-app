@@ -66,37 +66,33 @@ export function TaskList() {
         </div>
       ) : (
         <>
-          {sortedPendingTasks.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    待完成任务 ({pendingTasks.length})
-                  </h2>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">所有分类</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <span className="text-sm text-gray-500">
-                  {completedTasks.length} 项已完成
-                </span>
-              </div>
-              <div className="space-y-3">
-                {sortedPendingTasks.map((task) => (
-                  <TaskItem key={task.id} task={task} />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                待完成任务 ({pendingTasks.length})
+              </h2>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">所有分类</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
-          )}
+            <span className="text-sm text-gray-500">
+              {completedTasks.length} 项已完成
+            </span>
+          </div>
+          <div className="space-y-3">
+            {sortedPendingTasks.map((task) => (
+              <TaskItem key={task.id} task={task} />
+            ))}
+          </div>
 
           {completedTasks.length > 0 && (
             <div className="pt-6 border-t">
